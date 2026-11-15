@@ -33,12 +33,12 @@ func loadExpenses() ([]Expense, error) {
 		return nil, err
 	}
 
-	var expense []Expense
-	err = json.Unmarshal(data, &expense)
+	var expenses []Expense
+	err = json.Unmarshal(data, &expenses)
 	if err != nil {
 		return nil, err
 	}
-	return expense, err
+	return expenses, err
 }
 
 func saveExpenses(expenses []Expense) error {
