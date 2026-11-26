@@ -18,24 +18,47 @@ amount - это цена нашей траты или сумма как удоб
 
 */
 func addExpense(list []Expense, description string, amount float64) ([]Expense, Expense, error) {
+
 	if description == "" {
 		return list, Expense{}, fmt.Errorf("Описание не может быть пустым")
 	}
 	if amount <= 0 {
 		return list, Expense{}, fmt.Errorf("Не допустимое значение")
 	}
+	maxID := 0
+	for _, e := range list {
+		if e.ID > maxID {
+			maxID = e.ID
+		}
+	}
 	newExpense := Expense{
-		ID:          len(list) + 1,
+		ID:          maxID + 1,
 		Description: description,
 		Amount:      amount,
 		Date:        time.Now(),
 	}
 	list = append(list, newExpense)
-	return list, Expense{}, nil
+	return list, newExpense, nil
 }
 
-func summary(list []Expense) {
-	fmt.Println("Вот все траты:", list)
+func summaryExpenses(list []Expense) float64 {
+	var total float64
+	for _, e := range list {
+		total += e.Amount
+	}
+	return total
+}
+
+func filterByMonth(list []Expense, month int) []Expense {
+
+	m := time.Month(month)
+	var result []Expense
+	for _, e := range list {
+		if e.Date.Month() == m && e.Date.Year() == time.Now().Year() {
+			result = append(result, e)
+		}
+	}
+	return result
 }
 
 func deleteExpense(list []Expense, ID int) ([]Expense, error) {
@@ -55,19 +78,24 @@ func deleteExpense(list []Expense, ID int) ([]Expense, error) {
 	return list, nil
 }
 
-func updateExpense(list []Expense, ID int, description string, amount float64) ([]Expense, Expense, error) {
-	if description == "" {
-		return list, Expense{}, fmt.Errorf("Описание не может быть пустым")
-	}
-	if amount <= 0 {
-		return list, Expense{}, fmt.Errorf("Не допустимое значение")
-	}
-	for i := range list {
-		if list[i].ID == ID {
-			list[i].Description = description
-			list[i].Amount = amount
-			return list, list[i], nil
+/*
+	func updateExpense(list []Expense, ID int, description string, amount float64) ([]Expense, Expense, error) {
+		if description == "" {
+			return list, Expense{}, fmt.Errorf("Описание не может быть пустым")
 		}
+		if amount <= 0 {
+			return list, Expense{}, fmt.Errorf("Не допустимое значение")
+		}
+		for i := range list {
+			if list[i].ID == ID {
+				list[i].Description = description
+				list[i].Amount = amount
+				return list, list[i], nil
+			}
+		}
+		return list, Expense{}, fmt.Errorf("Не нашли данную трату")
 	}
-	return list, Expense{}, fmt.Errorf("Не нашли данную трату")
+*/
+func printExpense(list []Expense) {
+	fmt.Print(list)
 }

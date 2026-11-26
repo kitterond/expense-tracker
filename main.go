@@ -26,29 +26,79 @@ func main() {
 		log.Fatalf("Не удалось загрузить расходы: %v", err)
 	}
 	switch os.Args[1] {
-	default:
-		fmt.Println("неизвестная команда:", os.Args[1])
-		os.Exit(1)
 
 	case "add":
 		var addedExpense Expense
+
 		addCmd := flag.NewFlagSet("add", flag.ExitOnError)
+
 		description := addCmd.String("description", "", "описание расхода")
+
 		amount := addCmd.Float64("amount", 0, "сумма траты")
+
 		addCmd.Parse(os.Args[2:])
+
 		if *description == "" || *amount <= 0 {
-			fmt.Println("Проверьте формат траты на ее или ее значение.")
+			fmt.Println("Трата не должна быть пустой.")
 			os.Exit(1)
 		}
+
 		expenses, addedExpense, err = addExpense(expenses, *description, *amount)
+
 		if err != nil {
-			log.Fatalf("Не удалось добавить расходы")
+			log.Fatalf("Не удалось добавить расходы: %v", err)
+		}
+
+		err = saveExpenses(expenses)
+
+		if err != nil {
+			log.Fatalf("Не удалось сохранить: %v", err)
+		}
+
+		fmt.Println("Трата:", addedExpense, "была успешно добавлена")
+
+	case "delete":
+
+		deleteCmd := flag.NewFlagSet("delete", flag.ExitOnError)
+
+		ID := deleteCmd.Int("id", 0, "expense's ID")
+
+		deleteCmd.Parse(os.Args[2:])
+
+		if *ID <= 0 {
+			fmt.Println("Неверный ID.")
+			os.Exit(1)
+		}
+		expenses, err = deleteExpense(expenses, *ID)
+
+		if err != nil {
+			log.Fatalf("Не смогли удалить данную трату:%v", err)
 		}
 		err = saveExpenses(expenses)
 		if err != nil {
-			log.Fatal()
+			log.Fatalf("Не смогли сохранить: %v", err)
 		}
-		fmt.Println("Трата:", addedExpense, "была успешно добавлена")
-	}
+		fmt.Println("Трата была успешно удалена")
 
+	case "summary":
+		summaryCmd := flag.NewFlagSet("summary", flag.ExitOnError)
+		month := summaryCmd.Int("month", 0, "номер месяца (1-12)")
+		summaryCmd.Parse(os.Args[2:])
+
+		if *month == 0 {
+			fmt.Printf("Total expenses: $%.2f\n", summaryExpenses(expenses))
+		} else if *month < 1 || *month > 12 {
+			fmt.Println("Неправильный месяц: нужно число от 1 до 12.")
+			os.Exit(1)
+		} else {
+			total := summaryExpenses(filterByMonth(expenses, *month))
+			fmt.Printf("Total expenses for month %d: $%.2f\n", *month, total)
+		}
+	case "list":
+		printExpense(expenses)
+
+	default:
+		fmt.Println("неизвестная команда:", os.Args[1])
+		os.Exit(1)
+	}
 }
